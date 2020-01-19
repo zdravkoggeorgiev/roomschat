@@ -9,7 +9,7 @@ namespace RoomsChat.Hubs
         {
             // Timestamp system messages
             if(name == "_SYSTEM_")
-                message = DateTime.Now.ToString("[HH:MM:SS]") + message;
+                message = DateTime.Now.ToString("[HH:MM:ss]") + message;
 
             Clients.All.SendAsync("broadcastMessage", name, roomId, message);
         }
