@@ -1,13 +1,3 @@
-/*html, body {
-    font-size: 16px;
-}
-
-@media all and (max-device-width: 720px) {
-    html, body {
-        font-size: 20px;
-    }
-}*/
-
 html, body {
     padding: 0;
     height: 100%;
@@ -35,7 +25,6 @@ html, body {
 }
 
 .nav-tabs li {
-    cursor: pointer;
     list-style-type: none;
     margin-bottom: 15px;
     border-radius: 50em;
@@ -50,7 +39,6 @@ html, body {
     border: none;
     transition: all .3s ease;
     cursor: pointer;
-    list-style-type: none;
     color: #fff;
     text-decoration: none;
 }
@@ -90,6 +78,12 @@ html, body {
     background: linear-gradient(to right, #fa6c9f 0%, #ffe140 80%, #ffe140 100%);
 }
 
+.message {
+    width: 100%; 
+    padding: 5px 10px; 
+    border-style: hidden;
+}
+
 .friends-tab {
     background: linear-gradient(to right, rgba(82, 159, 253, 0.349) 0%, #00e1fa73 80%, #00e1fa5e 100%);
 }
@@ -102,7 +96,6 @@ html, body {
     background: linear-gradient(to right, rgba(68, 234, 118, 0.39) 0%, rgba(57, 250, 215, 0.299) 80%, rgba(57, 250, 215, 0.322) 100%);
 }
 
-
 .bottom-row {
     display: flex;
     justify-content: center;
@@ -110,49 +103,41 @@ html, body {
     background: #f3f3f3;
 }
 
-.btn-echo:focus , .btn-send:focus {
+.sendmessage:focus {
     outline: none;
 }
 
-.btn-send {
+.sendmessage {
     border: none;
     padding: 10px;
     border-radius: 10px;
     background-color:#fff;
     font-size: 14px;
     margin: 0 5px;
-    flex: 1;
     cursor: pointer;
 }
 
-#messages {
+.messages {
     height: calc(100% - 120px);
     float: none;
     padding-left: 0px;
     overflow-y: auto;
-    cursor: pointer;
 }
 
 textarea:focus {
-    outline: none !important;
+    outline: none;
 }
 
 textarea {
     min-height: 100px;
     max-width: 96%;
     font-size: 14px;
-    opacity: .8;
 }
 
 .system-message {
     background: #fff;
-}
-
-.broadcast-message {
-    display: inline-block;
-    background: yellow;
-    margin: auto;
-    padding: 5px 10px;
+    font-style: italic !important;
+    opacity: 0.4;
 }
 
 .message-entry {
@@ -179,25 +164,6 @@ textarea {
     max-width: calc(60%);
     word-wrap: break-word;
 }
-
-.message-content.pull-left:before {
-    width: 0;
-    height: 0;
-    display: block;
-    float: left;
-    border-top: 10px solid transparent;
-    border-bottom: 10px solid transparent;
-    border-right: 10px solid #b2e281;
-    margin: 15px 0;
-}
-
-.message-content.pull-right:after {
-    width: 0;
-    height: 0;
-    display: block;
-    float: right;
-    border-top: 10px solid transparent;
-    border-bottom: 10px solid transparent;
-    border-left: 10px solid #b2e281;
-    margin: 15px 0;
+.message-own {
+    font-weight: bold;
 }

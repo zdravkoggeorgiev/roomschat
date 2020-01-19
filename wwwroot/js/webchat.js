@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    function generateRandomName() {
+    var generateRandomName = function() {
         return "User_" + Math.random().toString(36).substring(2, 8);
     }
 
@@ -14,118 +14,135 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     } while(!username)
 
-    // Set initial focus to message input box.
-    var messageInput = document.getElementById('message');
-    messageInput.focus();
+    var onBeforeUnload = function (event) {
+        if(connection)
+            connection.send('broadcastMessage', '_SYSTEM_', '1', username + ' LEFT...');
+    }
 
-    function createMessageEntry(encodedName, encodedMsg) {
+    var createMessageEntry = function (encodedName, encodedMsg) {
         var entry = document.createElement('div');
         entry.classList.add("message-entry");
         if (encodedName === "_SYSTEM_") {
             entry.innerHTML = encodedMsg;
-            entry.classList.add("text-center");
             entry.classList.add("system-message");
-        } else if (encodedName === "_BROADCAST_") {
-            entry.classList.add("text-center");
-            entry.innerHTML = `<div class="text-center broadcast-message">${encodedMsg}</div>`;
+        } else if (encodedName === "_ERROR_") {
+            entry.innerHTML = `<div class="alert alert-danger fade in">${encodedMsg}</div>`;
         } else if (encodedName === username) {
-            entry.innerHTML = `<div class="message-avatar pull-right">${encodedName}</div>` +
-                `<div class="message-content pull-right">${encodedMsg}<div>`;
+            entry.innerHTML = `<div class="message-avatar message-own">${encodedName}:</div>` +
+                `<div class="message-content">${encodedMsg}<div>`;
         } else {
-            entry.innerHTML = `<div class="message-avatar pull-left">${encodedName}</div>` +
-                `<div class="message-content pull-left">${encodedMsg}<div>`;
+            entry.innerHTML = `<div class="message-avatar">${encodedName}:</div>` +
+                `<div class="message-content">${encodedMsg}<div>`;
         }
         return entry;
     }
 
-    function bindConnectionMessage(connection) {
-        var messageCallback = function(name, room, message) {
+    var GetMessageInputFromRoomId = function (roomId) {
+        return document.getElementById('message-' + roomId)
+    }
+
+    var sendButtonOnClick = function (event) {
+        // Get Id of the room and messageInput
+        var roomId = event.srcElement.id.slice(-1);
+        var messageInput = GetMessageInputFromRoomId(roomId);
+
+        // Call the broadcastMessage method on the hub.
+        if (messageInput.value) {
+            connection.send('broadcastMessage', username, roomId, messageInput.value);
+        }
+
+        // Clear text box and reset focus for next comment.
+        messageInput.value = '';
+        messageInput.focus();
+        event.preventDefault();
+    };
+    var messageBoxOnKeyPress = function (event) {
+        if (event.keyCode === 13) {
+            event.preventDefault();
+            var roomId = event.srcElement.id.slice(-1);
+            document.getElementById('sendmessage-' + roomId).click();
+            return false;
+        }
+    };
+
+    // Set initial focus to message input box.
+    GetMessageInputFromRoomId(1).focus();
+
+    var bindConnectionMessage = function (connection) {
+        var messageCallback = function(name, roomId, message) {
             if (!message) return;
+
             // Html encode display name and message.
-            var encodedName = name;
             var encodedMsg = message.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-            var messageEntry = createMessageEntry(encodedName, encodedMsg);
-                        
-            // TODO: below get room for messages
-            var messageBox = document.getElementById('messages');
+            var messageEntry = createMessageEntry(name, encodedMsg);
+            var messageBox = document.getElementById('messages-' + roomId);
+
+            // Append message
             messageBox.appendChild(messageEntry);
             messageBox.scrollTop = messageBox.scrollHeight;
         };
         // Create a function that the hub can call to broadcast messages.
         connection.on('broadcastMessage', messageCallback);
-        connection.on('echo', messageCallback);
         connection.onclose(onConnectionError);
     }
 
-    function onConnected(connection) {
+    var onConnected = function (connection) {
         console.log('connection started');
-        connection.send('broadcastMessage', '_SYSTEM_', username + ' JOINED');
-        document.getElementById('sendmessage').addEventListener('click', function (event) {
-            var room = "Family";
+        connection.send('broadcastMessage', '_SYSTEM_', '1', username + ' JOINED...');
+        window.addEventListener("beforeunload", onBeforeUnload);
 
-            // Call the broadcastMessage method on the hub.
-            if (messageInput.value) {
-                connection.send('broadcastMessage', username, room, messageInput.value);
-            }
-
-            // Clear text box and reset focus for next comment.
-            messageInput.value = '';
-            messageInput.focus();
-            event.preventDefault();
-        });
-        document.getElementById('message').addEventListener('keypress', function (event) {
-            if (event.keyCode === 13) {
-                event.preventDefault();
-                document.getElementById('sendmessage').click();
-                return false;
-            }
-        });
-        document.getElementById('echo').addEventListener('click', function (event) {
-            // Call the echo method on the hub.
-            connection.send('echo', username, messageInput.value);
-
-            // Clear text box and reset focus for next comment.
-            messageInput.value = '';
-            messageInput.focus();
-            event.preventDefault();
-        });
+        // SendButtons onClick assignmenet
+        var sendButtons = document.getElementsByClassName("sendmessage");
+        Array.from(sendButtons).forEach(function(element) {
+            element.addEventListener('click', sendButtonOnClick);
+          });
+        
+        // MessageBoxes onKeyPress assignment to catch Enter key
+        var messageBoxes = document.getElementsByClassName("message");
+        Array.from(messageBoxes).forEach(function(element) {
+            element.addEventListener('keypress', messageBoxOnKeyPress);
+          });
 
         // Tab selectors logic
         var chatTabs = document.querySelectorAll("ul.nav-tabs > li");
-        function chatTabsClicks(tabClickEvent) {
+        var chatTabsClick = function (event) {
             for (var i = 0; i < chatTabs.length; i++) {
                 chatTabs[i].classList.remove("active");
             };
-            var clickedTab = tabClickEvent.currentTarget;
+            var clickedTab = event.currentTarget;
             clickedTab.classList.add("active");
-            tabClickEvent.preventDefault();
+            event.preventDefault();
             var myContentPanes = document.querySelectorAll(".tab-pane");
             for (i = 0; i < myContentPanes.length; i++) {
                 myContentPanes[i].classList.remove("active");
             };
-            var anchorReference = tabClickEvent.target;
-            var activePaneId = anchorReference.getAttribute("href");
+            var activePaneId = event.target.getAttribute("href");
             var activePane = document.querySelector(activePaneId);
             activePane.classList.add("active");
         };
         for (i = 0; i < chatTabs.length; i++) {
-            chatTabs[i].addEventListener("click", chatTabsClicks)
+            chatTabs[i].addEventListener("click", chatTabsClick)
         };
     }
 
-    function onConnectionError(error) {
+    var onConnectionError = function (error) {
         if (error && error.message) {
             console.error(error.message);
         }
-        var modal = document.getElementById('myModal');
-        modal.classList.add('in');
-        modal.style = 'display: block;';
+
+        var messageBox = document.getElementById('messages-1');
+        var messageEntry = createMessageEntry("_ERROR_", 'Connection Error... Hit Refresh/F5 to rejoin.');
+        messageBox.appendChild(messageEntry);
+        messageBox.scrollTop = messageBox.scrollHeight;
     }
 
     var connection = new signalR.HubConnectionBuilder()
                                 .withUrl('/chat')
                                 .build();
     bindConnectionMessage(connection);
+
+    document.asd_connection = connection;
+
     connection.start()
         .then(function () {
             onConnected(connection);

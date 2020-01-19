@@ -1,18 +1,17 @@
+using System;
 using Microsoft.AspNetCore.SignalR;
 
 namespace RoomsChat.Hubs
 {
     public class ChatHub : Hub
     {
-        public void BroadcastMessage(string name, string room, string message)
+        public void BroadcastMessage(string name, string roomId, string message)
         {
-            Clients.All.SendAsync("broadcastMessage", name, room, message);
-        }
+            // Timestamp system messages
+            if(name == "_SYSTEM_")
+                message = DateTime.Now.ToString("[HH:MM:SS]") + message;
 
-        // TODO: remove when communcation is stable
-        public void Echo(string name, string message)
-        {
-            Clients.Client(Context.ConnectionId).SendAsync("echo", name, message + " (echo from server)");
+            Clients.All.SendAsync("broadcastMessage", name, roomId, message);
         }
     }
 }
