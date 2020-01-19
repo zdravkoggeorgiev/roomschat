@@ -158,6 +158,9 @@ textarea {
     border-radius: 50px;
     padding: 14px;
 }
+.message-avatar.own {
+    font-weight: bold;
+}
 
 .message-content {
     position: relative;
@@ -180,8 +183,4 @@ textarea {
     border-top: 12px solid transparent;
     border-bottom: 12px solid transparent;
     border-right: 12px solid white; 
-}
-
-.message-own {
-    font-weight: bold;
 }

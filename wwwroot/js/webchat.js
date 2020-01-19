@@ -1,4 +1,23 @@
 document.addEventListener('DOMContentLoaded', function () {
+
+    // Rooms dynamic generation from template
+    // TODO: move chatList structure to BackEnd for security reasons
+    var chatsList = ["family", "friends", "work"];
+    var windowTemplate = chatsList.map((item, index) => `<div id="tab-${index + 1}" class="tab-pane ${index === 0 ? "active" : ""}">
+                                                                    <div class="${item}-tab messages" id="messages-${index + 1}"></div>
+                                                                    <div class="bottom-row"> 
+                                                                        <textarea id="message-${index + 1}" class="message"
+                                                                                    placeholder="Type message and press Enter to send..."></textarea>
+                                                                        <button class="sendmessage" id="sendmessage-${index + 1}">Send</button>
+                                                                    </div>
+                                                                </div>`).join("");
+    var buttonsTemplate = chatsList.map((item, index) => `<li class="${index === 0 ? "active" : ""}">
+                                                                    <a class="${item}" href="#tab-${index + 1}">${item}</a>
+                                                              </li>`).join("");
+    document.getElementById("nav").innerHTML = `${buttonsTemplate}`;
+    document.getElementById("tab").innerHTML = `${windowTemplate}`;
+    // ---------------------------------------------------------------------------------------------------
+
     var generateRandomName = function() {
         return "User_" + Math.random().toString(36).substring(2, 8);
     }
@@ -8,14 +27,15 @@ document.addEventListener('DOMContentLoaded', function () {
     var promptMessage = 'Enter your nickname:';
     do {
         username = prompt(promptMessage, username);
-        if (!username || username.startsWith('_') || username.indexOf('<') > -1 || username.indexOf('>') > -1) {
+        if (!username || username.startsWith('_') || username.indexOf('<') > -1 || username.indexOf('>') > -1 || username.length > 13)  {
             username = '';
-            promptMessage = 'Invalid input, special symbols are forbidden. Enter your nickname:';
+            promptMessage = 'Invalid input, 13 symbols max, special symbols are forbidden. Enter your nickname:';
         }
     } while(!username)
 
     var onBeforeUnload = function (event) {
         if(connection)
+            // Notify only in Family chat about joining and leaving
             connection.send('broadcastMessage', '_SYSTEM_', '1', username + ' LEFT...');
     }
 
