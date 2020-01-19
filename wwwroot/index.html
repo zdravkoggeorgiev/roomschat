@@ -5,22 +5,52 @@
     <meta name="viewport" content="width=device-width">
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="css/site.css" rel="stylesheet" />
+    <link href="./css/site.css" rel="stylesheet" />
     <title>Rooms chat with no Auth</title>
 </head>
 <body>
-    <h2 class="text-center" style="margin-top: 0; padding-top: 30px; padding-bottom: 30px;">Azure SignalR Group Chat</h2>
-    <div class="container" style="height: calc(100% - 110px);">
-        <div id="messages" style="background-color: whitesmoke; "></div>
-        <div style="width: 100%; border-left-style: ridge; border-right-style: ridge;">
-            <textarea id="message"
-                          style="width: 100%; padding: 5px 10px; border-style: hidden;" 
-                          placeholder="Type message and press Enter to send..."></textarea>
-        </div>
-        <div style="overflow: auto; border-style: ridge; border-top-style: hidden;">
-            <button class="btn-warning pull-right" id="echo">Echo</button>
-            <button class="btn-success pull-right" id="sendmessage">Send</button>
+    <h2 class="heading">Azure SignalR Group Chat</h2>
+    <div class="container">
+        <ul class="nav-tabs">
+            <li class="active">
+                <a class="family" href="#tab-1">Family</a>
+            </li>
+            <li class="">
+                <a class="friends" href="#tab-2">Friends</a>
+            </li>
+            <li class="">
+                <a class="work" href="#tab-3">Work</a>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div id="tab-1" class="tab-pane active">
+                <div class="family-tab" id="messages"></div>
+                <div class="bottom-row">
+                    <textarea id="message" class="family-tab"
+                                style="width: 100%; padding: 5px 10px; border-style: hidden;" 
+                                placeholder="Type message and press Enter to send..."></textarea>
+                    <button class="btn-send" id="sendmessage">Send</button>
+                </div>
+            </div>
+            <div id="tab-2" class="tab-pane">
+                <div class="friends-tab" id="messages"></div>
+                <div class="bottom-row">
+                    <textarea id="message" class="friends-tab"
+                                style="width: 100%; padding: 5px 10px; border-style: hidden;" 
+                                placeholder="Type message and press Enter to send..."></textarea>
+                    <button class="btn-send" id="sendmessage">Send</button>
+                </div>
+            </div>
+            <div id="tab-3" class="tab-pane">
+                <div class="work-tab" id="messages"></div>
+                <div class="bottom-row"> 
+                    <span id="echo"></span>
+                    <textarea id="message" class="work-tab"
+                                style="width: 100%; padding: 5px 10px; border-style: hidden;" 
+                                placeholder="Type message and press Enter to send..."></textarea>
+                    <button class="btn-send" id="sendmessage">Send</button>
+                </div>
+            </div>
         </div>
     </div>
     <div class="modal alert alert-danger fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">

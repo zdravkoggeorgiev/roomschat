@@ -89,6 +89,28 @@ document.addEventListener('DOMContentLoaded', function () {
             messageInput.focus();
             event.preventDefault();
         });
+
+        // Tab selectors logic
+        var chatTabs = document.querySelectorAll("ul.nav-tabs > li");
+        function chatTabsClicks(tabClickEvent) {
+            for (var i = 0; i < chatTabs.length; i++) {
+                chatTabs[i].classList.remove("active");
+            };
+            var clickedTab = tabClickEvent.currentTarget;
+            clickedTab.classList.add("active");
+            tabClickEvent.preventDefault();
+            var myContentPanes = document.querySelectorAll(".tab-pane");
+            for (i = 0; i < myContentPanes.length; i++) {
+                myContentPanes[i].classList.remove("active");
+            };
+            var anchorReference = tabClickEvent.target;
+            var activePaneId = anchorReference.getAttribute("href");
+            var activePane = document.querySelector(activePaneId);
+            activePane.classList.add("active");
+        };
+        for (i = 0; i < chatTabs.length; i++) {
+            chatTabs[i].addEventListener("click", chatTabsClicks)
+        };
     }
 
     function onConnectionError(error) {
