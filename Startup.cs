@@ -23,9 +23,10 @@ namespace RoomsChat
                 app.UseDeveloperExceptionPage();
             }
 
+            // TODO: deal with obsolete later
             app.UseSignalR(routes =>
             {
-                routes.MapHub<Chat>("/chat");
+                routes.MapHub<ChatHub>("/chat");
             });
 
             app.UseFileServer();

@@ -39,13 +39,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function bindConnectionMessage(connection) {
-        var messageCallback = function(name, message) {
+        var messageCallback = function(name, room, message) {
             if (!message) return;
             // Html encode display name and message.
             var encodedName = name;
             var encodedMsg = message.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
             var messageEntry = createMessageEntry(encodedName, encodedMsg);
                         
+            // TODO: below get room for messages
             var messageBox = document.getElementById('messages');
             messageBox.appendChild(messageEntry);
             messageBox.scrollTop = messageBox.scrollHeight;
@@ -60,9 +61,11 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log('connection started');
         connection.send('broadcastMessage', '_SYSTEM_', username + ' JOINED');
         document.getElementById('sendmessage').addEventListener('click', function (event) {
+            var room = "Family";
+
             // Call the broadcastMessage method on the hub.
             if (messageInput.value) {
-                connection.send('broadcastMessage', username, messageInput.value);
+                connection.send('broadcastMessage', username, room, messageInput.value);
             }
 
             // Clear text box and reset focus for next comment.
