@@ -1,9 +1,9 @@
 document.addEventListener('DOMContentLoaded', function () {
 
     // Rooms dynamic generation from template
-    // TODO: move chatList structure to BackEnd for security reasons
-    var chatsList = ["family", "friends", "work"];
-    var windowTemplate = chatsList.map((item, index) => `<div id="tab-${index + 1}" class="tab-pane ${index === 0 ? "active" : ""}">
+    // TODO: move roomsList structure to BackEnd for security reasons
+    var roomsList = ["family", "friends", "work"];
+    var windowTemplate = roomsList.map((item, index) => `<div id="tab-${index + 1}" class="tab-pane ${index === 0 ? "active" : ""}">
                                                                     <div class="${item}-tab messages" id="messages-${index + 1}"></div>
                                                                     <div class="bottom-row"> 
                                                                         <textarea id="message-${index + 1}" class="message"
@@ -11,11 +11,11 @@ document.addEventListener('DOMContentLoaded', function () {
                                                                         <button class="sendmessage" id="sendmessage-${index + 1}">Send</button>
                                                                     </div>
                                                                 </div>`).join("");
-    var buttonsTemplate = chatsList.map((item, index) => `<li class="${index === 0 ? "active" : ""}">
+    var buttonsTemplate = roomsList.map((item, index) => `<li class="${index === 0 ? "active" : ""}">
                                                                     <a class="${item}" href="#tab-${index + 1}">${item}</a>
                                                               </li>`).join("");
-    document.getElementById("nav").innerHTML = `${buttonsTemplate}`;
-    document.getElementById("tab").innerHTML = `${windowTemplate}`;
+    document.getElementById("nav").innerHTML = buttonsTemplate;
+    document.getElementById("tab").innerHTML = windowTemplate;
     // ---------------------------------------------------------------------------------------------------
 
     var generateRandomName = function() {
@@ -33,9 +33,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     } while(!username)
 
+    // Notify for leaving on browser close
     var onBeforeUnload = function (event) {
         if(connection)
-            // Notify only in Family chat about joining and leaving
+            // TODO: make it to notify all channels, not only Family
             connection.send('broadcastMessage', '_SYSTEM_', '1', username + ' LEFT...');
     }
 
@@ -48,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function () {
         } else if (encodedName === "_ERROR_") {
             entry.innerHTML = `<div class="alert alert-danger fade in">${encodedMsg}</div>`;
         } else if (encodedName === username) {
-            entry.innerHTML = `<div class="message-avatar message-own">${encodedName}:</div>` +
+            entry.innerHTML = `<div class="message-avatar own">${encodedName}:</div>` +
                 `<div class="message-content">${encodedMsg}<div>`;
         } else {
             entry.innerHTML = `<div class="message-avatar">${encodedName}:</div>` +
@@ -77,6 +78,7 @@ document.addEventListener('DOMContentLoaded', function () {
         event.preventDefault();
     };
     var messageBoxOnKeyPress = function (event) {
+        // On Enter key - send message
         if (event.keyCode === 13) {
             event.preventDefault();
             var roomId = event.srcElement.id.slice(-1);
@@ -124,10 +126,10 @@ document.addEventListener('DOMContentLoaded', function () {
           });
 
         // Tab selectors logic
-        var chatTabs = document.querySelectorAll("ul.nav-tabs > li");
-        var chatTabsClick = function (event) {
-            for (var i = 0; i < chatTabs.length; i++) {
-                chatTabs[i].classList.remove("active");
+        var roomsTabs = document.querySelectorAll("ul.nav-tabs > li");
+        var roomTabClick = function (event) {
+            for (var i = 0; i < roomsTabs.length; i++) {
+                roomsTabs[i].classList.remove("active");
             };
             var clickedTab = event.currentTarget;
             clickedTab.classList.add("active");
@@ -140,11 +142,12 @@ document.addEventListener('DOMContentLoaded', function () {
             var activePane = document.querySelector(activePaneId);
             activePane.classList.add("active");
         };
-        for (i = 0; i < chatTabs.length; i++) {
-            chatTabs[i].addEventListener("click", chatTabsClick)
+        for (i = 0; i < roomsTabs.length; i++) {
+            roomsTabs[i].addEventListener("click", roomTabClick)
         };
     }
 
+    // Notify user on connection problems
     var onConnectionError = function (error) {
         if (error && error.message) {
             console.error(error.message);
@@ -156,12 +159,11 @@ document.addEventListener('DOMContentLoaded', function () {
         messageBox.scrollTop = messageBox.scrollHeight;
     }
 
+    // Initialize Hub connection
     var connection = new signalR.HubConnectionBuilder()
                                 .withUrl('/chat')
                                 .build();
     bindConnectionMessage(connection);
-
-    document.asd_connection = connection;
 
     connection.start()
         .then(function () {

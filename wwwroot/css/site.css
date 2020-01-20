@@ -6,7 +6,6 @@ html, body {
 
 .container {
     display: flex;
-    flex-direction: row;
     justify-content: center;
     width: 100%;
     margin: 0 auto;
@@ -29,14 +28,14 @@ html, body {
 .nav-tabs li {
     list-style-type: none;
     margin-bottom: 15px;
-    border-radius: 50em;
+    border-radius: 50px;
 }
 
 .nav-tabs li a {
     display: flex;
     justify-content: center;
     padding: 10px 15px;
-    border-radius: 50em;
+    border-radius: 50px;
     font-size: 18px;
     border: none;
     transition: all .3s ease;
@@ -51,11 +50,9 @@ html, body {
 
 .tab-content{
     flex: 4;
+    width: 100%;
 }
 
-.tab-content {
-    width: 100%;	
-}
 .tab-pane.active {
     display: flex;
     flex-direction: column;
@@ -158,6 +155,7 @@ textarea {
     border-radius: 50px;
     padding: 14px;
 }
+
 .message-avatar.own {
     font-weight: bold;
 }
