@@ -1,28 +1,96 @@
 document.addEventListener('DOMContentLoaded', function () {
+    // Object to keep variables we can need later
+    // It's final goal is to separate chat logic from UI
+    // To a chat component, which should be only configured with settings, and it could be attached to UI/HTML pages
+    // TODO: Get rid of global var later
+    var rooms = window._rooms = {};
 
-    // Rooms dynamic generation from template
     // TODO: move roomsList structure to BackEnd for security reasons
-    var roomsList = ["family", "friends", "work"];
-    var windowTemplate = roomsList.map((item, index) => `<div id="tab-${index + 1}" class="tab-pane ${index === 0 ? "active" : ""}">
-                                                                    <div class="${item}-tab messages" id="messages-${index + 1}"></div>
+    rooms.list = ["family", "friends", "work"];
+    var windowTemplate = rooms.list.map((item, index) => `<div id="tab-${index}" class="tab-pane ${index === 0 ? "active" : ""}">
+                       
+    <div class="${item}-tab messages" id="messages-${index}"></div>
                                                                     <div class="bottom-row"> 
-                                                                        <textarea id="message-${index + 1}" class="message"
+                                                                        <textarea id="message-${index}" class="message"
                                                                                     placeholder="Type message and press Enter to send..."></textarea>
-                                                                        <button class="sendmessage" id="sendmessage-${index + 1}">Send</button>
+                                                                        <button class="sendmessage" id="sendmessage-${index}">Send</button>
                                                                     </div>
                                                                 </div>`).join("");
-    var buttonsTemplate = roomsList.map((item, index) => `<li class="${index === 0 ? "active" : ""}">
-                                                                    <a class="${item}" href="#tab-${index + 1}">${item}</a>
+    var buttonsTemplate = rooms.list.map((item, index) => `<li class="${index === 0 ? "active" : ""}">
+                                                                    <a class="${item}" href="#tab-${index}">${item}</a>
                                                               </li>`).join("");
     document.getElementById("nav").innerHTML = buttonsTemplate;
     document.getElementById("tab").innerHTML = windowTemplate;
-    // ---------------------------------------------------------------------------------------------------
 
+    rooms.tabs = document.querySelectorAll("ul.nav-tabs > li");
+    rooms.messageBoxes = [];
+    for (let i = 0; i < rooms.list.length; i++) 
+        rooms.messageBoxes[i] = document.getElementById('messages-' + i);
+    rooms.message = [];
+    for (let i = 0; i < rooms.list.length; i++) 
+        rooms.message[i] = document.getElementById('message-' + i);
+    rooms.sendBtn = [];
+    for (let i = 0; i < rooms.list.length; i++) 
+        rooms.sendBtn[i] = document.getElementById('sendmessage-' + i);
+
+    // Set initial focus to message input box.
+    rooms.message[1].focus();
+        
+    // ---------------------------------------------------------------------------------------------------
+    
+    var addDivToMessageBox = function (roomId, messageDiv) {
+        rooms.messageBoxes[roomId].appendChild(messageDiv);
+        rooms.messageBoxes[roomId].scrollTop = rooms.messageBoxes[roomId].scrollHeight;
+    }
+    var addDivToAllmessageBoxes = function (messagediv) {
+        for (let i = 0; i < rooms.messageBoxes.length; i++) {
+            addDivToMessageBox(i, i == 0 ? messagediv : messagediv.cloneNode(true));
+        }
+    }
+    var AppenndMessage = function (messageType, message, roomId) {
+        // TODO:make structure for possible messageTypes so they become extendable
+        var div;
+        if (messageType === "_SYSTEM_") {
+            div = createDiv("_SYSTEM_",message);
+            addDivToAllmessageBoxes(div);
+            return;
+        }
+
+        if (messageType === username) {
+            div = createDiv("_SAME_USER_",message, messageType)
+        } else {
+            div = createDiv("_MESSAGE_",message, messageType);
+        }
+        addDivToMessageBox(roomId, div);
+    }
+
+    // TODO this is UI, not chat function.
+    // It should be given as parammter, or to be easly replaced
+    var createDiv = function (divType, message, headMessage) {
+        var div = document.createElement('div');
+        div.classList.add("message-div");
+        if (divType === "_SYSTEM_") {
+            div.innerHTML = `<div class="system">${message}</div>`;
+        } else if (divType === "_ERROR_") {
+            div.innerHTML = `<div class="alert alert-danger fade in">${message}</div>`;
+        } else if (divType === "_SAME_USER_") {
+            div.innerHTML = `<div class="message-avatar own">${headMessage}:</div>` +
+                `<div class="message-content">${message}<div>`;
+        } else if (divType === "_MESSAGE_") {
+            div.innerHTML = `<div class="message-avatar">${headMessage}:</div>` +
+                `<div class="message-content">${message}<div>`;
+        }
+        return div;
+    }
+    
+    // ---------------------------------------------------------------------------------------------------
+    // helper functions w/o business logic
+    
     var generateRandomName = function() {
         return "User_" + Math.random().toString(36).substring(2, 8);
     }
 
-    // Get the user name and store it to prepend to messages.
+    // Get the user username and store it to prepend to messages.
     var username = generateRandomName();
     var promptMessage = 'Enter your nickname:';
     do {
@@ -32,40 +100,19 @@ document.addEventListener('DOMContentLoaded', function () {
             promptMessage = 'Invalid input, 13 symbols max, special symbols are forbidden. Enter your nickname:';
         }
     } while(!username)
+    
+    // ---------------------------------------------------------------------------------------------------
 
     // Notify for leaving on browser close
     var onBeforeUnload = function (event) {
         if(connection)
-            // TODO: make it to notify all channels, not only Family
             connection.send('broadcastMessage', '_SYSTEM_', '1', username + ' LEFT...');
-    }
-
-    var createMessageEntry = function (encodedName, encodedMsg) {
-        var entry = document.createElement('div');
-        entry.classList.add("message-entry");
-        if (encodedName === "_SYSTEM_") {
-            entry.innerHTML = encodedMsg;
-            entry.classList.add("system-message");
-        } else if (encodedName === "_ERROR_") {
-            entry.innerHTML = `<div class="alert alert-danger fade in">${encodedMsg}</div>`;
-        } else if (encodedName === username) {
-            entry.innerHTML = `<div class="message-avatar own">${encodedName}:</div>` +
-                `<div class="message-content">${encodedMsg}<div>`;
-        } else {
-            entry.innerHTML = `<div class="message-avatar">${encodedName}:</div>` +
-                `<div class="message-content">${encodedMsg}<div>`;
-        }
-        return entry;
-    }
-
-    var GetMessageInputFromRoomId = function (roomId) {
-        return document.getElementById('message-' + roomId)
     }
 
     var sendButtonOnClick = function (event) {
         // Get Id of the room and messageInput
         var roomId = event.srcElement.id.slice(-1);
-        var messageInput = GetMessageInputFromRoomId(roomId);
+        var messageInput = rooms.message[roomId];
 
         // Call the broadcastMessage method on the hub.
         if (messageInput.value) {
@@ -82,26 +129,18 @@ document.addEventListener('DOMContentLoaded', function () {
         if (event.keyCode === 13) {
             event.preventDefault();
             var roomId = event.srcElement.id.slice(-1);
-            document.getElementById('sendmessage-' + roomId).click();
+            rooms.sendBtn[roomId].click();
             return false;
         }
     };
 
-    // Set initial focus to message input box.
-    GetMessageInputFromRoomId(1).focus();
-
     var bindConnectionMessage = function (connection) {
-        var messageCallback = function(name, roomId, message) {
-            if (!message) return;
+        var messageCallback = function(username, roomId, rawMessage) {
+            if (!rawMessage) return;
 
-            // Html encode display name and message.
-            var encodedMsg = message.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-            var messageEntry = createMessageEntry(name, encodedMsg);
-            var messageBox = document.getElementById('messages-' + roomId);
-
-            // Append message
-            messageBox.appendChild(messageEntry);
-            messageBox.scrollTop = messageBox.scrollHeight;
+            // Html encode display username and message.
+            var message = rawMessage.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            AppenndMessage(username, message, roomId);
         };
         // Create a function that the hub can call to broadcast messages.
         connection.on('broadcastMessage', messageCallback);
@@ -113,23 +152,22 @@ document.addEventListener('DOMContentLoaded', function () {
         connection.send('broadcastMessage', '_SYSTEM_', '1', username + ' JOINED...');
         window.addEventListener("beforeunload", onBeforeUnload);
 
+        // TODO: this should be parametrized, instead of global
         // SendButtons onClick assignmenet
-        var sendButtons = document.getElementsByClassName("sendmessage");
-        Array.from(sendButtons).forEach(function(element) {
+        window._rooms.sendBtn.forEach(function(element) {
             element.addEventListener('click', sendButtonOnClick);
           });
         
-        // MessageBoxes onKeyPress assignment to catch Enter key
-        var messageBoxes = document.getElementsByClassName("message");
-        Array.from(messageBoxes).forEach(function(element) {
+        // messageBoxes onKeyPress assignment to catch Enter key
+        window._rooms.messageBoxes.forEach(function(element) {
             element.addEventListener('keypress', messageBoxOnKeyPress);
           });
 
+        var tabs = window._rooms.tabs;
         // Tab selectors logic
-        var roomsTabs = document.querySelectorAll("ul.nav-tabs > li");
         var roomTabClick = function (event) {
-            for (var i = 0; i < roomsTabs.length; i++) {
-                roomsTabs[i].classList.remove("active");
+            for (var i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove("active");
             };
             var clickedTab = event.currentTarget;
             clickedTab.classList.add("active");
@@ -142,8 +180,8 @@ document.addEventListener('DOMContentLoaded', function () {
             var activePane = document.querySelector(activePaneId);
             activePane.classList.add("active");
         };
-        for (i = 0; i < roomsTabs.length; i++) {
-            roomsTabs[i].addEventListener("click", roomTabClick)
+        for (i = 0; i < tabs.length; i++) {
+            tabs[i].addEventListener("click", roomTabClick)
         };
     }
 
@@ -152,11 +190,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (error && error.message) {
             console.error(error.message);
         }
-
-        var messageBox = document.getElementById('messages-1');
-        var messageEntry = createMessageEntry("_ERROR_", 'Connection Error... Hit Refresh/F5 to rejoin.');
-        messageBox.appendChild(messageEntry);
-        messageBox.scrollTop = messageBox.scrollHeight;
+        var messagediv = createDiv("_ERROR_", 'Connection Error... Hit Refresh/F5 to rejoin.');
+        addDivToAllmessageBoxes(messagediv);
     }
 
     // Initialize Hub connection
